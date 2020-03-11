@@ -2,11 +2,14 @@
 #define NODE_H
 
 #include <iostream>
-using namespace std;
+#include <string>
+#include <queue>
 
+using namespace std;
 
 enum STATE {SLEEP, FIND, FOUND};
 enum STATUS {BASIC, BRANCH, REJECT};
+enum CODE {CONNECT}
 
 class node{
 public:
@@ -14,10 +17,16 @@ public:
 	~node();
 
 	// variables
-	char name;
-	int level; int bestWt; int rec;
-	node* parent; node* bestNode; node* testNode;	
+	int level;
+	string name;
+	queue inbox;
+	state mystate;
 
+	int bestWt;
+	int rec;
+	node* parent;
+	node* bestNode;
+	node* testNode;
 
 	// functions
 	void __init__();
