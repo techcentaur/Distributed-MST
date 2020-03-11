@@ -9,7 +9,7 @@ using namespace std;
 
 enum STATE {SLEEP, FIND, FOUND};
 enum STATUS {BASIC, BRANCH, REJECT};
-enum CODE {CONNECT}
+enum CODE {CONNECT, INITIATE}
 
 class node{
 public:
@@ -32,6 +32,7 @@ public:
 	void __init__();
 	void receive();
 	void initiate();
+	void connect();
 	void findMin();
 	void report();
 	void test();

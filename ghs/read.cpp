@@ -19,6 +19,8 @@ int main(){
 		edges.push_back(&e);
 	}
 
+	
+
 	cout<<"[.] number of nodes: "<<numNodes<<endl;
 	cout<<"[.] number of edges: "<<edges.size()<<endl;
 
