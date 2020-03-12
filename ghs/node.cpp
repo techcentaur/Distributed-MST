@@ -6,18 +6,22 @@
 using namespace std;
 
 node::node(){
-	mystate = SLEEP;
+	state = SLEEP;
 }
 
 node::~node(){}
 
 node::__init__(){
-	this->mystate = FOUND;
+	this->state = FOUND;
 	this->level = 0;
 	this->rec = 0;
 	
 	packet p = new Packet(CONNECT, 0);
 	this->send(&p); // to q
+}
+
+node::addEdge(edge* e, node* n){
+	this->neighbours.push_back(make_pair(e, n))
 }
 
 node::receive(){
@@ -38,7 +42,7 @@ node::connect(packet* p){
 		// combine with rule LT
 		// edge from p-q status <- branch
 		packet p = new Packet(INITIATE, this->level,
-							this->name, this->mystate);
+							this->name, this->state);
 		this->send(&p); // to q
 	}
 	else if(status[q] == BASIC){

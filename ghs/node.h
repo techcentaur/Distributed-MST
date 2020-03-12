@@ -7,7 +7,7 @@
 
 using namespace std;
 
-enum STATE {SLEEP, FIND, FOUND};
+enum STATES {SLEEP, FIND, FOUND};
 enum STATUS {BASIC, BRANCH, REJECT};
 enum CODE {CONNECT, INITIATE}
 
@@ -20,13 +20,15 @@ public:
 	int level;
 	string name;
 	queue inbox;
-	state mystate;
+	states state;
 
 	int bestWt;
 	int rec;
 	node* parent;
 	node* bestNode;
 	node* testNode;
+
+	vector<pair<edge*, node*>> neighbours;
 
 	// functions
 	void __init__();
@@ -39,6 +41,8 @@ public:
 	void accept();
 	void reject();
 	void changeRoot();
+
+	void addEdge(edge*, node*);
 };
 
 typedef struct edge{
