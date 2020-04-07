@@ -23,6 +23,30 @@ class Node(object):
 	def drop(self, message):
 		self.inbox.append(message)
 
+	def online(self):
+		while not self.inbox.empty():
+			message = self.inbox.popleft()
+
+			if self.state is "SLEEP":
+				self.wake_up()
+
+			if message["code"] == "INITIATE":
+				pass
+			elif message["code"] == "CONNECT":
+				pass
+			elif message["code"] == "INITIATE":
+				pass
+			elif message["code"] == "TEST":
+				pass
+			elif message["code"] == "ACCEPT":
+				pass
+			elif message["code"] == "REJECT":
+				pass
+			elif message["code"] == "REPORT":
+				pass
+			elif message["code"] == "CHANGEROOT":
+				pass
+
 	def wake_up(self):
 		self.edges.sort(key=lambda x: x[2])
 
