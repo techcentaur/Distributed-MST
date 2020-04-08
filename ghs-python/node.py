@@ -56,11 +56,11 @@ class Node(object):
 				if ret == -1:
 					self.drop(__msg__)
 			elif __msg__["code"] == "ACCEPT":
-				pass
+				self.accept(e_index)
 			elif __msg__["code"] == "REJECT":
-				pass
+				self.reject(e_index)
 			elif __msg__["code"] == "REPORT":
-				pass
+				self.process_report(__msg__["best_weight"], e_index)
 			elif __msg__["code"] == "CHANGEROOT":
 				pass
 
@@ -176,3 +176,52 @@ class Node(object):
  				"weight": self.edges[i].weight
  			}
  			all_nodes[self.edges[i].node].drop(message)
+ 		return 1
+
+ 	def accept(self, i):
+ 		self.test_node = None
+ 		if self.edges[i].weight < self.best_weight:
+ 			self.best_node = i
+ 			self.best_weight = self.edges[i].weight
+ 		report()
+
+ 	def reject(self, i):
+ 		if self.edges[i].state == "BASIC":
+ 			self.edges[i].state == "REJECT"
+ 		find_min()	
+
+ 	def report(self):
+ 		count = 0
+ 		for i in range(len(self.edges)):
+ 			if (self.edges[i].state == "BRANCH") and (i != self.parent):
+ 				count+=1
+ 		if (self.find_count == count) and (self.test_node == None):
+ 			self.state = "FOUND"
+ 			message = {
+ 				"code": "REPORT",
+ 				"weight": self.edges[self.parent].weight
+ 				"best_weight": self.best_weight
+ 			}
+ 			all_nodes[self.edges[self.parent].node_i].drop(message)
+
+
+ 	def process_report(self, best_wt, i):
+ 		if self.parent != i:
+ 			if best_wt < self.best_weight:
+ 				self.best_weight = best_wt
+ 				self.best_node = i
+ 			self.rec += 1
+ 			report()
+ 		else:
+ 			if self.state == "FIND":
+ 				return -1
+ 			elif best_wt > self.best_weight:
+ 				change_root()
+ 			elif (best_wt == self.best_weight) and (self.best_weight == float('inf')):
+ 				# stop
+
+ 	def change_root(self):
+ 		pass
+
+ 	def process_change_root(self):
+ 		self.change_root()
