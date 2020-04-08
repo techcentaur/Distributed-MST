@@ -47,12 +47,14 @@ class Node(object):
 				pass
 			elif __msg__["code"] == "CONNECT":
 				ret = self.connect(__msg__["level"], e_index)
-				if not ret:
-					self.inbox.append(__msg__)
+				if ret == -1:
+					self.drop(__msg__)
 			elif __msg__["code"] == "INITIATE":
-				pass
+				self.initiate(__msg__["level"], __msg__["name"], __msg__["state"], e_index)
 			elif __msg__["code"] == "TEST":
-				pass
+				ret = self.test(__msg__["level"], __msg__["name"], e_index)
+				if ret == -1:
+					self.drop(__msg__)
 			elif __msg__["code"] == "ACCEPT":
 				pass
 			elif __msg__["code"] == "REJECT":
@@ -95,7 +97,7 @@ class Node(object):
 			all_nodes[self.edges[e_index].node_i].drop(message)
 
 		elif self.edges[e_index].state == "BASIC":
-			return False
+			return -1
 
 		else:
 			message = {
@@ -106,26 +108,71 @@ class Node(object):
 				"weight": self.edges[e_index].weight
 			}
 			all_nodes[self.edges[e_index].node_i].drop(message)
-		return True
+		return 1
 
  	def initiate(self, level, name, state, j):
  		self.level, self.name, self.state = level, name, state
- 		self.parent = j
+ 		self.parent = j # according of my indexing
 
- 		self.best_edge = None
+ 		self.best_node = None
  		self.best_weight = float('inf')
+ 		self.test_node = None
 
- 		for edge in self.edges:
- 			if (edge != j) and (self.edges[edge].state == "BRANCH"):
+ 		for e in range(len(self.edges)):
+ 			if (e != j) and (self.edges[e].state == "BRANCH"):
  				message = {
  					"code": "INITIATE",
  					"level": self.level,
  					"name":	self.name,
  					"state": self.state,
- 					"j": None
+ 					"weight": self.edges[e].weight
  				}
- 				self.nodes[self.edge[edge].node_index].drop(message)
+ 				self.nodes[self.edges[e].node_i].drop(message)
 
  		if self.state == "FIND":
  			self.find_count = 0
  			find_min()
+
+ 	def find_min(self):
+ 		idx = -1
+ 		tmp = EdgeNode(-1, float('inf'), -1)
+ 		for e in self.edges:
+ 			if self.edges[e].state == "BASIC":
+ 				if tmp > self.edges[e]:
+ 					idx = e
+
+ 		if idx != -1:
+ 			self.test_node = None
+ 			message = {
+ 				"code": "TEST",
+ 				"level": self.level,
+ 				"name": self.name,
+ 				"weight": self.edges[idx].weight
+ 			}
+ 			all_nodes[self.edges[idx].node_i].drop(message)
+ 		else:
+ 			self.test_node = None
+ 			report()
+
+ 	def test(self, level, name, i):
+ 		if self.level < level:
+ 			return -1
+ 		elif self.name == name:
+ 			if self.edges[i].state == "BASIC":
+ 				self.edges[i].state == "REJECT"
+ 			if i != self.test_node:
+ 				# drop reject to q (letting him that you've rejected this)
+ 				message = {
+ 					"code": "REJECT",
+ 					"weight": self.edges[i].weight
+ 				}
+ 				all_nodes[self.edges[i].node].drop(message)
+ 			else:
+ 				find_min()
+ 		else:
+ 			# send accept to q
+ 			message = {
+ 				"code": "ACCEPT",
+ 				"weight": self.edges[i].weight
+ 			}
+ 			all_nodes[self.edges[i].node].drop(message)
