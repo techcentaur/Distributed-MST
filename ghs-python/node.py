@@ -221,7 +221,21 @@ class Node(object):
  				# stop
 
  	def change_root(self):
- 		pass
+ 		if self.edges[self.best_node] == "BRANCH":
+ 			message = {
+ 				"code": "CHANGEROOT",
+ 				"weight": self.edges[self.best_node].weight
+ 			}
+ 			all_nodes[self.edges[self.best_node].node_i].drop(message)
+ 		else:
+ 			self.edges[self.best_node].state == "BRANCH"
+ 			message = {
+ 				"code": "CONNECT",
+ 				"level": self.level,
+ 				"weight": self.edges[self.best_node].state
+ 			}
+ 			all_nodes[self.edges[self.best_node].node_i].drop(message)
+
 
  	def process_change_root(self):
  		self.change_root()
