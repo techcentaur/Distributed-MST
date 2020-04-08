@@ -7,6 +7,8 @@ class Node:
 	def __init__(self):
 		self.name = None
 		self.edges = []
+		self.lock = None
+		self.is_over = False
 
 		self.state = "SLEEP"
 		self.level = None
@@ -18,6 +20,7 @@ class Node:
 		self.best_weight = float('inf')
 
 		self.inbox = deque()
+
 
 	def add_edge(self, i, wt, n):
 		e = edge.EdgeNode(i, wt, n)
@@ -40,6 +43,9 @@ class Node:
 		for e, i in enumerate(self.edges):
 			if e.weight == wt:
 				return i
+
+	def __init_lock__(self, lock):
+		self.lock = lock
 
 	def drop(self, message):
 		self.inbox.append(message)
@@ -231,7 +237,7 @@ class Node:
 			elif best_wt > self.best_weight:
 				change_root()
 			elif (best_wt == self.best_weight) and (self.best_weight == float('inf')):
-				pass
+				self.is_over = True
 
 	def change_root(self):
 		if self.edges[self.best_node] == "BRANCH":
