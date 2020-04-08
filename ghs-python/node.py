@@ -48,11 +48,13 @@ class Node:
 		self.lock = lock
 
 	def drop(self, message):
-		self.inbox.append(message)
+		with self.lock:
+			self.inbox.append(message)
 
 	def read(self):
 		if not self.inbox.empty():
-			__msg__ = self.inbox.popleft()
+			with self.lock:
+				__msg__ = self.inbox.popleft()
 
 			if self.state is "SLEEP":
 				self.wake_up()
@@ -84,7 +86,9 @@ class Node:
 		min_edge_i = find_min_wt_edge()
 
 		self.edges[min_edge_i].state = "BRANCH"
-		
+		with self.lock:
+			manage.mst.append(self.edges[min_edge_i].index)
+
 		self.rec = 0
 		self.level = 0
 		self.name = float('inf')
@@ -95,7 +99,7 @@ class Node:
 			"level": self.level,
 			"weight": self.edges[min_edge_i].weight
 		}
-		manage.all_nodes[self.edges[min_edge_i].node_i].drop(message)
+		self.edges[min_edge_i].node.drop(message)
 
 
 	def connect(self, level, e_index):
@@ -112,7 +116,7 @@ class Node:
 				"state": self.state,
 				"weight": self.edges[e_index].weight
 			}
-			manage.all_nodes[self.edges[e_index].node_i].drop(message)
+			self.edges[e_index].node.drop(message)
 
 		elif self.edges[e_index].state == "BASIC":
 			return -1
@@ -125,7 +129,7 @@ class Node:
 				"state": "FIND",
 				"weight": self.edges[e_index].weight
 			}
-			manage.all_nodes[self.edges[e_index].node_i].drop(message)
+			self.edges[e_index].node.drop(message)
 		return 1
 
 	def initiate(self, level, name, state, i):
@@ -144,7 +148,7 @@ class Node:
 					"state": self.state,
 					"weight": self.edges[e].weight
 				}
-				manage.all_nodes[self.edges[e].node_i].drop(message)
+				self.edges[e].node.drop(message)
 
 		if self.state == "FIND":
 			self.rec = 0
@@ -168,7 +172,7 @@ class Node:
 				"name": self.name,
 				"weight": self.edges[idx].weight
 			}
-			manage.all_nodes[self.edges[idx].node_i].drop(message)
+			self.edges[idx].node.drop(message)
 		else:
 			self.test_node = None
 			report()
@@ -185,7 +189,7 @@ class Node:
 					"code": "REJECT",
 					"weight": self.edges[i].weight
 				}
-				manage.all_nodes[self.edges[i].node].drop(message)
+				self.edges[i].node.drop(message)
 			else:
 				find_min()
 		else:
@@ -194,7 +198,7 @@ class Node:
 				"code": "ACCEPT",
 				"weight": self.edges[i].weight
 			}
-			manage.all_nodes[self.edges[i].node].drop(message)
+			self.edges[i].node.drop(message)
 		return 1
 
 	def accept(self, i):
@@ -221,7 +225,7 @@ class Node:
 				"best_weight": self.best_weight,
 				"weight": self.edges[self.parent].weight
 			}
-			manage.all_nodes[self.edges[self.parent].node_i].drop(message)
+			self.edges[self.parent].node.drop(message)
 
 
 	def process_report(self, best_wt, i):
@@ -245,15 +249,18 @@ class Node:
 				"code": "CHANGEROOT",
 				"weight": self.edges[self.best_node].weight
 			}
-			manage.all_nodes[self.edges[self.best_node].node_i].drop(message)
+			self.edges[self.best_node].node.drop(message)
 		else:
 			self.edges[self.best_node].state == "BRANCH"
+			with self.lock:
+				manage.mst.append(self.edges[self.best_node].index)
+
 			message = {
 				"code": "CONNECT",
 				"level": self.level,
 				"weight": self.edges[self.best_node].state
 			}
-			manage.all_nodes[self.edges[self.best_node].node_i].drop(message)
+			self.edges[self.best_node].node.drop(message)
 
 
 	def process_change_root(self):

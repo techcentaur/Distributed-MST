@@ -15,7 +15,7 @@ class EdgeNode:
 	def __init__(self, index, weight, node_i, state="BASIC"):
 		self.index = index # index of edge in all_edges data structure
 		self.weight = weight
-		self.node_i = node_i
+		self.node = node
 		self.state = state
 
 	def __eq__(self, other):

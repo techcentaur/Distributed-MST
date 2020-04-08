@@ -1,8 +1,10 @@
 import sys
 import threading
+import operator
 
 all_edges = []
 all_nodes = []
+mst = []
 
 import node
 import edge
@@ -29,8 +31,8 @@ if __name__ == '__main__':
 		e = edge.Edge(n1, n2, wt)
 		all_edges.append(e)
 		
-		all_nodes[n1].add_edge(i, n2, wt)
-		all_nodes[n2].add_edge(i, n1, wt)
+		all_nodes[n1].add_edge(i, all_nodes[n2], wt)
+		all_nodes[n2].add_edge(i, all_nodes[n1], wt)
 
 	threads = []
 	for n in all_nodes
@@ -44,6 +46,11 @@ if __name__ == '__main__':
 		t.join()
 
 	# we done here
+	# print("[*] No of nodes: {}".format(num_nodes))
+	# print("[*] No of edges: {}".format(len(data)-1))
 
-	print("[*] No of nodes: {}".format(num_nodes))
-	print("[*] No of edges: {}".format(len(data)-1))
+	mst_edges = [all_edges[i] for i in mst]
+	mst_edges.sort(key=operator.attrgetter('wt'))
+
+	for m in mst_edges:
+		print(mst_edges)
