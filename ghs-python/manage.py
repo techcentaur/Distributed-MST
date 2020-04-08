@@ -26,8 +26,8 @@ if __name__ == '__main__':
 		n1, n2, wt = data[i+1][1:-1].split(",")
 		n1, n2, wt = int(n1), int(n2), int(wt)
 		e = Edge(n1, n2, wt)
-		
 		edges.append(e)
+		
 		all_nodes[n1].add_edge(i, wt, n2)
 		all_nodes[n2].add_edge(i, wt, n1)
 
