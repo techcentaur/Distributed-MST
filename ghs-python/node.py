@@ -1,9 +1,9 @@
 from collections import deque 
 
-from edge import EdgeNode
-from manange import all_edges, all_nodes
+import edge
+import manage
 
-class Node(object):
+class Node:
 	def __init__(self):
 		self.name = None
 		self.edges = []
@@ -20,12 +20,12 @@ class Node(object):
 		self.inbox = deque()
 
 	def add_edge(self, i, wt, n):
-		e = EdgeNode(i, wt, n)
+		e = edge.EdgeNode(i, wt, n)
 		self.edges.append(e)
 
 	def find_min_wt_edge(self):
 		__id__ = None
- 		tmp = EdgeNode(-1, float('inf'), -1)
+		tmp = edge.EdgeNode(-1, float('inf'), -1)
 
 		for i in range(len(self.edges)):
 			if self.edges[i] < tmp:
@@ -89,7 +89,7 @@ class Node(object):
 			"level": self.level,
 			"weight": self.edges[min_edge_i].weight
 		}
-		all_nodes[self.edges[min_edge_i].node_i].drop(message)
+		manage.all_nodes[self.edges[min_edge_i].node_i].drop(message)
 
 
 	def connect(self, level, e_index):
@@ -106,7 +106,7 @@ class Node(object):
 				"state": self.state,
 				"weight": self.edges[e_index].weight
 			}
-			all_nodes[self.edges[e_index].node_i].drop(message)
+			manage.all_nodes[self.edges[e_index].node_i].drop(message)
 
 		elif self.edges[e_index].state == "BASIC":
 			return -1
@@ -119,136 +119,136 @@ class Node(object):
 				"state": "FIND",
 				"weight": self.edges[e_index].weight
 			}
-			all_nodes[self.edges[e_index].node_i].drop(message)
+			manage.all_nodes[self.edges[e_index].node_i].drop(message)
 		return 1
 
- 	def initiate(self, level, name, state, i):
- 		self.level, self.name, self.state = level, name, state
- 		self.parent = i # as per my indexing
+	def initiate(self, level, name, state, i):
+		self.level, self.name, self.state = level, name, state
+		self.parent = i # as per my indexing
 
- 		self.best_node = None
- 		self.best_weight = float('inf')
+		self.best_node = None
+		self.best_weight = float('inf')
 
- 		for e in range(len(self.edges)):
- 			if (e != i) and (self.edges[e].state == "BRANCH"):
- 				message = {
- 					"code": "INITIATE",
- 					"level": self.level,
- 					"name":	self.name,
- 					"state": self.state,
- 					"weight": self.edges[e].weight
- 				}
- 				all_nodes[self.edges[e].node_i].drop(message)
+		for e in range(len(self.edges)):
+			if (e != i) and (self.edges[e].state == "BRANCH"):
+				message = {
+					"code": "INITIATE",
+					"level": self.level,
+					"name":	self.name,
+					"state": self.state,
+					"weight": self.edges[e].weight
+				}
+				manage.all_nodes[self.edges[e].node_i].drop(message)
 
- 		if self.state == "FIND":
- 			self.rec = 0
- 			find_min()
+		if self.state == "FIND":
+			self.rec = 0
+			find_min()
 
- 	def find_min(self):
- 		idx = -1
- 		tmp = EdgeNode(-1, float('inf'), -1)
- 		for e in self.edges:
- 			if self.edges[e].state == "BASIC":
- 				if tmp > self.edges[e]:
- 					tmp = self.edges[e]
- 					idx = e
+	def find_min(self):
+		idx = -1
+		tmp = edge.EdgeNode(-1, float('inf'), -1)
+		for e in self.edges:
+			if self.edges[e].state == "BASIC":
+				if tmp > self.edges[e]:
+					tmp = self.edges[e]
+					idx = e
 
- 		if idx != -1:
- 			self.test_node = idx
+		if idx != -1:
+			self.test_node = idx
 
- 			message = {
- 				"code": "TEST",
- 				"level": self.level,
- 				"name": self.name,
- 				"weight": self.edges[idx].weight
- 			}
- 			all_nodes[self.edges[idx].node_i].drop(message)
- 		else:
- 			self.test_node = None
- 			report()
+			message = {
+				"code": "TEST",
+				"level": self.level,
+				"name": self.name,
+				"weight": self.edges[idx].weight
+			}
+			manage.all_nodes[self.edges[idx].node_i].drop(message)
+		else:
+			self.test_node = None
+			report()
 
- 	def test(self, level, name, i):
- 		if self.level < level:
- 			return -1 # wait (by adding back in inbox @ read func)
- 		elif self.name == name:
- 			if self.edges[i].state == "BASIC":
- 				self.edges[i].state == "REJECT"
- 			if i != self.test_node:
- 				# drop reject to q (letting him that you've rejected this)
- 				message = {
- 					"code": "REJECT",
- 					"weight": self.edges[i].weight
- 				}
- 				all_nodes[self.edges[i].node].drop(message)
- 			else:
- 				find_min()
- 		else:
- 			# send accept to q
- 			message = {
- 				"code": "ACCEPT",
- 				"weight": self.edges[i].weight
- 			}
- 			all_nodes[self.edges[i].node].drop(message)
- 		return 1
+	def test(self, level, name, i):
+		if self.level < level:
+			return -1 # wait (by adding back in inbox @ read func)
+		elif self.name == name:
+			if self.edges[i].state == "BASIC":
+				self.edges[i].state == "REJECT"
+			if i != self.test_node:
+				# drop reject to q (letting him that you've rejected this)
+				message = {
+					"code": "REJECT",
+					"weight": self.edges[i].weight
+				}
+				manage.all_nodes[self.edges[i].node].drop(message)
+			else:
+				find_min()
+		else:
+			# send accept to q
+			message = {
+				"code": "ACCEPT",
+				"weight": self.edges[i].weight
+			}
+			manage.all_nodes[self.edges[i].node].drop(message)
+		return 1
 
- 	def accept(self, i):
- 		self.test_node = None
- 		if self.edges[i].weight < self.best_weight:
- 			self.best_node = i
- 			self.best_weight = self.edges[i].weight
- 		report()
+	def accept(self, i):
+		self.test_node = None
+		if self.edges[i].weight < self.best_weight:
+			self.best_node = i
+			self.best_weight = self.edges[i].weight
+		report()
 
- 	def reject(self, i):
- 		if self.edges[i].state == "BASIC":
- 			self.edges[i].state = "REJECT"
- 		find_min()	
+	def reject(self, i):
+		if self.edges[i].state == "BASIC":
+			self.edges[i].state = "REJECT"
+		find_min()	
 
- 	def report(self):
- 		count = 0
- 		for i in range(len(self.edges)):
- 			if (self.edges[i].state == "BRANCH") and (i != self.parent):
- 				count+=1
- 		if (self.rec == count) and (self.test_node == None):
- 			self.state = "FOUND"
- 			message = {
- 				"code": "REPORT",
- 				"best_weight": self.best_weight,
- 				"weight": self.edges[self.parent].weight
- 			}
- 			all_nodes[self.edges[self.parent].node_i].drop(message)
-
-
- 	def process_report(self, best_wt, i):
- 		if self.parent != i:
- 			if best_wt < self.best_weight:
- 				self.best_weight = best_wt
- 				self.best_node = i
- 			self.rec += 1
- 			report()
- 		else:
- 			if self.state == "FIND":
- 				return -1
- 			elif best_wt > self.best_weight:
- 				change_root()
- 			elif (best_wt == self.best_weight) and (self.best_weight == float('inf')):
- 				# stop
-
- 	def change_root(self):
- 		if self.edges[self.best_node] == "BRANCH":
- 			message = {
- 				"code": "CHANGEROOT",
- 				"weight": self.edges[self.best_node].weight
- 			}
- 			all_nodes[self.edges[self.best_node].node_i].drop(message)
- 		else:
- 			self.edges[self.best_node].state == "BRANCH"
- 			message = {
- 				"code": "CONNECT",
- 				"level": self.level,
- 				"weight": self.edges[self.best_node].state
- 			}
- 			all_nodes[self.edges[self.best_node].node_i].drop(message)
+	def report(self):
+		count = 0
+		for i in range(len(self.edges)):
+			if (self.edges[i].state == "BRANCH") and (i != self.parent):
+				count+=1
+		if (self.rec == count) and (self.test_node == None):
+			self.state = "FOUND"
+			message = {
+				"code": "REPORT",
+				"best_weight": self.best_weight,
+				"weight": self.edges[self.parent].weight
+			}
+			manage.all_nodes[self.edges[self.parent].node_i].drop(message)
 
 
- 	def process_change_root(self):
- 		self.change_root()
+	def process_report(self, best_wt, i):
+		if self.parent != i:
+			if best_wt < self.best_weight:
+				self.best_weight = best_wt
+				self.best_node = i
+			self.rec += 1
+			report()
+		else:
+			if self.state == "FIND":
+				return -1
+			elif best_wt > self.best_weight:
+				change_root()
+			elif (best_wt == self.best_weight) and (self.best_weight == float('inf')):
+				pass
+
+	def change_root(self):
+		if self.edges[self.best_node] == "BRANCH":
+			message = {
+				"code": "CHANGEROOT",
+				"weight": self.edges[self.best_node].weight
+			}
+			manage.all_nodes[self.edges[self.best_node].node_i].drop(message)
+		else:
+			self.edges[self.best_node].state == "BRANCH"
+			message = {
+				"code": "CONNECT",
+				"level": self.level,
+				"weight": self.edges[self.best_node].state
+			}
+			manage.all_nodes[self.edges[self.best_node].node_i].drop(message)
+
+
+	def process_change_root(self):
+		self.change_root()
