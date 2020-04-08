@@ -3,31 +3,41 @@ from collections import deque
 from edge import EdgeNode
 from manange import all_edges, all_nodes
 
-
 class Node(object):
-	def __init__(self, name):
-		self.name = name
+	def __init__(self):
+		self.name = None
 		self.edges = []
 
 		self.state = "SLEEP"
 		self.level = None
 		self.parent = None
 
+		self.rec = None
+		self.best_node = None
+		self.test_node = None
+		self.best_weight = float('inf')
+
 		self.inbox = deque()
 
-	def add_edge(self, i, n, wt):
-		e = EdgeNode(i, n, wt, "BASIC")
+	def add_edge(self, i, wt, n):
+		e = EdgeNode(i, wt, n)
 		self.edges.append(e)
 
 	def find_min_wt_edge(self):
-		__id__ = 0
-		for i in range(1, len(self.edges)):
-			if self.edges[i] < self.edges[__id__]:
+		__id__ = None
+ 		tmp = EdgeNode(-1, float('inf'), -1)
+
+		for i in range(len(self.edges)):
+			if self.edges[i] < tmp:
+				tmp = self.edges[i]
 				__id__ = i
+
+		if __id__ is None:
+			print("[*] Exception: No min weight edge")
 		return __id__
 
 	def get_e_index_from_wt(self, wt):
-		for e, i in enumerate(self.edges:)
+		for e, i in enumerate(self.edges):
 			if e.weight == wt:
 				return i
 
@@ -35,7 +45,7 @@ class Node(object):
 		self.inbox.append(message)
 
 	def read(self):
-		while not self.inbox.empty():
+		if not self.inbox.empty():
 			__msg__ = self.inbox.popleft()
 
 			if self.state is "SLEEP":
@@ -44,7 +54,7 @@ class Node(object):
 			e_index = get_e_index_from_wt(__msg__["weight"])
 
 			if __msg__["code"] == "WAKEUP":
-				pass
+				self.wake_up()
 			elif __msg__["code"] == "CONNECT":
 				ret = self.connect(__msg__["level"], e_index)
 				if ret == -1:
@@ -62,16 +72,17 @@ class Node(object):
 			elif __msg__["code"] == "REPORT":
 				self.process_report(__msg__["best_weight"], e_index)
 			elif __msg__["code"] == "CHANGEROOT":
-				pass
+				self.process_change_root()
 
 	def wake_up(self):
 		min_edge_i = find_min_wt_edge()
 
 		self.edges[min_edge_i].state = "BRANCH"
 		
+		self.rec = 0
 		self.level = 0
+		self.name = float('inf')
 		self.state = "FOUND"
-		self.find_count = 0
 
 		message = {
 			"code": "CONNECT",
@@ -82,8 +93,9 @@ class Node(object):
 
 
 	def connect(self, level, e_index):
-		if self.state is "SLEEP":
-			self.wake_up()
+		# should it wake up or not?
+		# if self.state is "SLEEP":
+		# 	self.wake_up()
 
 		if level < self.level:
 			self.edges[e_index].state = "BRANCH"
@@ -103,23 +115,22 @@ class Node(object):
 			message = {
 				"code": "INITIATE",
 				"level": self.level+1,
-				"name": None, #pq ?
+				"name": self.edges[e_index].weight,
 				"state": "FIND",
 				"weight": self.edges[e_index].weight
 			}
 			all_nodes[self.edges[e_index].node_i].drop(message)
 		return 1
 
- 	def initiate(self, level, name, state, j):
+ 	def initiate(self, level, name, state, i):
  		self.level, self.name, self.state = level, name, state
- 		self.parent = j # according of my indexing
+ 		self.parent = i # as per my indexing
 
  		self.best_node = None
  		self.best_weight = float('inf')
- 		self.test_node = None
 
  		for e in range(len(self.edges)):
- 			if (e != j) and (self.edges[e].state == "BRANCH"):
+ 			if (e != i) and (self.edges[e].state == "BRANCH"):
  				message = {
  					"code": "INITIATE",
  					"level": self.level,
@@ -127,10 +138,10 @@ class Node(object):
  					"state": self.state,
  					"weight": self.edges[e].weight
  				}
- 				self.nodes[self.edges[e].node_i].drop(message)
+ 				all_nodes[self.edges[e].node_i].drop(message)
 
  		if self.state == "FIND":
- 			self.find_count = 0
+ 			self.rec = 0
  			find_min()
 
  	def find_min(self):
@@ -139,10 +150,12 @@ class Node(object):
  		for e in self.edges:
  			if self.edges[e].state == "BASIC":
  				if tmp > self.edges[e]:
+ 					tmp = self.edges[e]
  					idx = e
 
  		if idx != -1:
- 			self.test_node = None
+ 			self.test_node = idx
+
  			message = {
  				"code": "TEST",
  				"level": self.level,
@@ -156,7 +169,7 @@ class Node(object):
 
  	def test(self, level, name, i):
  		if self.level < level:
- 			return -1
+ 			return -1 # wait (by adding back in inbox @ read func)
  		elif self.name == name:
  			if self.edges[i].state == "BASIC":
  				self.edges[i].state == "REJECT"
@@ -187,7 +200,7 @@ class Node(object):
 
  	def reject(self, i):
  		if self.edges[i].state == "BASIC":
- 			self.edges[i].state == "REJECT"
+ 			self.edges[i].state = "REJECT"
  		find_min()	
 
  	def report(self):
@@ -195,12 +208,12 @@ class Node(object):
  		for i in range(len(self.edges)):
  			if (self.edges[i].state == "BRANCH") and (i != self.parent):
  				count+=1
- 		if (self.find_count == count) and (self.test_node == None):
+ 		if (self.rec == count) and (self.test_node == None):
  			self.state = "FOUND"
  			message = {
  				"code": "REPORT",
+ 				"best_weight": self.best_weight,
  				"weight": self.edges[self.parent].weight
- 				"best_weight": self.best_weight
  			}
  			all_nodes[self.edges[self.parent].node_i].drop(message)
 
