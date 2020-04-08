@@ -25,26 +25,28 @@ class Node(object):
 
 	def online(self):
 		while not self.inbox.empty():
-			message = self.inbox.popleft()
+			m = self.inbox.popleft()
 
 			if self.state is "SLEEP":
 				self.wake_up()
 
-			if message["code"] == "INITIATE":
+			if m["code"] == "WAKEUP":
 				pass
-			elif message["code"] == "CONNECT":
+			elif m["code"] == "CONNECT":
+				ret = self.connect(m["level"], m["e_index"])
+				if not ret:
+					self.inbox.append(m)
+			elif m["code"] == "INITIATE":
 				pass
-			elif message["code"] == "INITIATE":
+			elif m["code"] == "TEST":
 				pass
-			elif message["code"] == "TEST":
+			elif m["code"] == "ACCEPT":
 				pass
-			elif message["code"] == "ACCEPT":
+			elif m["code"] == "REJECT":
 				pass
-			elif message["code"] == "REJECT":
+			elif m["code"] == "REPORT":
 				pass
-			elif message["code"] == "REPORT":
-				pass
-			elif message["code"] == "CHANGEROOT":
+			elif m["code"] == "CHANGEROOT":
 				pass
 
 	def wake_up(self):
@@ -59,6 +61,29 @@ class Node(object):
 
 		message = {
 			"code": "CONNECT",
+			"level": self.level,
+			"e_index": self.edges[min_edge[0]]
 		}
 		all_nodes[self.edges[min_edge][1]].drop(message)
+
+
+	def connect(self, level, e_index):
+		if self.state is "SLEEP":
+			self.wake_up()
+
+		if level < self.level:
+			pass
+		elif all_edges[e_index].state is "BASIC":
+			return False
+		else:
+			message = {
+			"code": "INITIATE",
+			"level": self.level+1,
+			}
+			all_nodes[self.edges[e_index][1]].drop(message)
+		return True
+
+ 	def initiate(self):
+ 		
+
 
