@@ -12,6 +12,7 @@ import edge
 def node_go_brrrrrr(n):
 	while not n.is_over:
 		n.read()
+	return 1
 
 if __name__ == '__main__':
 

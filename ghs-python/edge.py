@@ -12,7 +12,7 @@ class Edge:
 
 @total_ordering
 class EdgeNode:
-	def __init__(self, index, weight, node, state="BASIC"):
+	def __init__(self, index, weight, node, state):
 		self.index = index # index of edge in all_edges data structure
 		self.weight = weight
 		self.node = node
