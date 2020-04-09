@@ -7,7 +7,7 @@ class Edge:
 		self.wt = wt
 
 	def __str__(self):
-		s = "({}, {}): {} | {}".format(self.n1, self.n2, self.wt)
+		s = "({}, {}, {})".format(self.n1, self.n2, self.wt)
 		return s
 
 @total_ordering

@@ -4,6 +4,9 @@ import edge
 import manage
 from states import States
 
+over = False
+mst = {}
+
 class Node:
 	def __init__(self, i):
 		self.S = States()
@@ -66,7 +69,7 @@ class Node:
 				self.wake_up()
 
 			i = self.convert_indexing(m["weight"])
-			print("{} <- {} <- {}".format(self.index, m["code"], self.edges[i].node.index))
+			# print("{} <- {} <- {}".format(self.index, m["code"], self.edges[i].node.index))
 
 			if m["code"] == self.S.connect:
 				self.connect(m["level"], i)
@@ -84,15 +87,18 @@ class Node:
 				self.process_change_root()
 			else:
 				self.wake_up()
+		return over
 
 	def wake_up(self):
-		print("WAKE UP | {}".format(self.index))
+		# print("WAKE UP | {}".format(self.index))
 
 		min_edge_i = self.find_min_wt_edge()
 
 		with self.lock:
-			print("ADD MST")
-			manage.mst.append(self.edges[min_edge_i].index)
+			global mst
+			if self.edges[min_edge_i].index not in mst:
+				# print("add")
+				mst[self.edges[min_edge_i].index] = True
 
 		self.edges[min_edge_i].state = self.S.branch
 		self.level = 0
@@ -265,8 +271,10 @@ class Node:
 			elif best_wt > self.best_weight:
 				self.change_root()
 			elif (best_wt == self.best_weight == float('inf')):
-				self.is_over = True
-				print("{} FINIIISH".format(self.index))
+				# print("finish")
+				with self.lock:
+					global over
+					over = True
 
 	def change_root(self):
 		if self.edges[self.best_node].state == self.S.branch:
@@ -285,8 +293,10 @@ class Node:
 			self.edges[self.best_node].node.drop(message)
 			
 			with self.lock:
-				print("ADD MST")
-				manage.mst.append(self.edges[self.best_node].index)
+				# print("add")
+				global mst
+				if self.edges[self.best_node].index not in mst:
+					mst[self.edges[self.best_node].index] = True
 
 
 	def process_change_root(self):

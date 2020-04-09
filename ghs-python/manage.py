@@ -4,15 +4,16 @@ import operator
 
 all_edges = []
 all_nodes = []
-mst = []
+mst = {}
 
 import node
 import edge
 
 def node_go_brrrrrr(n):
-	while not n.is_over:
-		n.read()
-	return 1
+	while True:
+		ret = n.read()
+		if ret:
+			return
 
 if __name__ == '__main__':
 
@@ -35,7 +36,6 @@ if __name__ == '__main__':
 		all_nodes[n1].add_edge(i, wt, all_nodes[n2])
 		all_nodes[n2].add_edge(i, wt, all_nodes[n1])
 
-	print("* nodes created")
 	threads = []
 	for n in all_nodes:
 		n.__init_lock__(threading.Lock())
@@ -43,19 +43,15 @@ if __name__ == '__main__':
 		threads.append(t)	
 		t.start()
 
-	print("all threads started")
 	all_nodes[0].wake_up()
 	for t in threads:
 		t.join()
 
-	print("*we done here")
-
-
 	# print("[*] No of nodes: {}".format(num_nodes))
 	# print("[*] No of edges: {}".format(len(data)-1))
 
-	mst_edges = [all_edges[i] for i in mst]
+	mst_edges = [all_edges[k] for k, v in node.mst.items()]
 	mst_edges.sort(key=operator.attrgetter('wt'))
 
 	for m in mst_edges:
-		print(mst_edges)
+		print(m)
