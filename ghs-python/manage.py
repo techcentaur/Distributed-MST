@@ -9,7 +9,7 @@ mst = []
 import node
 import edge
 
-def node_go_brrrrrr(n, lock):
+def node_go_brrrrrr(n):
 	while not n.is_over:
 		n.read()
 
@@ -22,7 +22,7 @@ if __name__ == '__main__':
 	num_nodes = int(data[0])
 	all_nodes = []
 	for i in range(num_nodes):
-		n = node.Node()
+		n = node.Node(i)
 		all_nodes.append(n)
 
 	for i in range(len(data)-1):
@@ -31,21 +31,23 @@ if __name__ == '__main__':
 		e = edge.Edge(n1, n2, wt)
 		all_edges.append(e)
 		
-		all_nodes[n1].add_edge(i, all_nodes[n2], wt)
-		all_nodes[n2].add_edge(i, all_nodes[n1], wt)
+		all_nodes[n1].add_edge(i, wt, all_nodes[n2])
+		all_nodes[n2].add_edge(i, wt, all_nodes[n1])
 
+	print("* nodes created")
 	threads = []
-	for n in all_nodes
+	for n in all_nodes:
 		n.__init_lock__(threading.Lock())
-		t = threading.Thread(target=node_go_brrrrrr, args=[n, lock])
+		t = threading.Thread(target=node_go_brrrrrr, args=[n])
 		t.start()
 		threads.append(t)	
 
+	print("all threads started")
 	all_nodes[0].wake_up()
 	for t in threads:
 		t.join()
 
-	# we done here
+	print("*we done here")
 	# print("[*] No of nodes: {}".format(num_nodes))
 	# print("[*] No of edges: {}".format(len(data)-1))
 
