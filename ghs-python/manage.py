@@ -39,8 +39,8 @@ if __name__ == '__main__':
 	for n in all_nodes:
 		n.__init_lock__(threading.Lock())
 		t = threading.Thread(target=node_go_brrrrrr, args=[n])
-		t.start()
 		threads.append(t)	
+		t.start()
 
 	print("all threads started")
 	all_nodes[0].wake_up()
@@ -48,6 +48,8 @@ if __name__ == '__main__':
 		t.join()
 
 	print("*we done here")
+
+
 	# print("[*] No of nodes: {}".format(num_nodes))
 	# print("[*] No of edges: {}".format(len(data)-1))
 

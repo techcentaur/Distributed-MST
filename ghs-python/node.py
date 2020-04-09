@@ -13,13 +13,13 @@ class Node:
 		self.is_over = False
 
 		self.state = "SLEEP"
-		self.level = None
 		self.parent = None
 
-		self.rec = None
-		self.best_node = None
-		self.test_node = None
+		self.best_node = -1
+		self.test_node = -1
 		self.best_weight = float('inf')
+		self.rec = -1
+		self.level = -1
 
 		self.inbox = deque()
 
@@ -28,8 +28,7 @@ class Node:
 		return s
 
 	def add_edge(self, i, wt, n):
-		e = edge.EdgeNode(i, wt, n)
-		self.edges.append(e)
+		self.edges.append(edge.EdgeNode(i, wt, n))
 
 	def find_min_wt_edge(self):
 		__id__ = None
@@ -61,9 +60,12 @@ class Node:
 			with self.lock:
 				__msg__ = self.inbox.popleft()
 
-			print("{} | ".format(self.index) + __msg__["code"])
-
 			e_index = self.get_e_index_from_wt(__msg__["weight"])
+
+			if self.state == "SLEEP":
+				self.wake_up()
+
+			print("{} <- {} <- {}".format(self.index, __msg__["code"], self.edges[e_index].node.index))
 			if e_index == None:
 				print("CAN't BE")
 				print(__msg__["weight"], __msg__["code"])
@@ -71,15 +73,11 @@ class Node:
 					print(e)
 
 			if __msg__["code"] == "CONNECT":
-				ret = self.connect(__msg__["level"], e_index)
-				if ret == -1:
-					self.drop(__msg__)
+				self.connect(__msg__["level"], e_index)
 			elif __msg__["code"] == "INITIATE":
 				self.initiate(__msg__["level"], __msg__["name"], __msg__["state"], e_index)
 			elif __msg__["code"] == "TEST":
-				ret = self.test(__msg__["level"], __msg__["name"], e_index)
-				if ret == -1:
-					self.drop(__msg__)
+				self.test(__msg__["level"], __msg__["name"], e_index)
 			elif __msg__["code"] == "ACCEPT":
 				self.accept(e_index)
 			elif __msg__["code"] == "REJECT":
@@ -96,10 +94,11 @@ class Node:
 
 		min_edge_i = self.find_min_wt_edge()
 
-		self.edges[min_edge_i].state = "BRANCH"
 		with self.lock:
+			print("ADD MST")
 			manage.mst.append(self.edges[min_edge_i].index)
 
+		self.edges[min_edge_i].state = "BRANCH"
 		self.level = 0
 		self.state = "FOUND"
 		self.rec = 0
@@ -111,60 +110,61 @@ class Node:
 		}
 		self.edges[min_edge_i].node.drop(message)
 
-	def connect(self, level, e_index):
-		if self.state == "SLEEP":
-			self.wake_up()
-
+	def connect(self, level, i):
 		if level < self.level:
-			self.edges[e_index].state = "BRANCH"
+			self.edges[i].state = "BRANCH"
 			message = {
 				"code": "INITIATE",
 				"level": self.level,
 				"name": self.name,
 				"state": self.state,
-				"weight": self.edges[e_index].weight
+				"weight": self.edges[i].weight
 			}
-			self.edges[e_index].node.drop(message)
+			self.edges[i].node.drop(message)
 
-			if self.state == "FIND":
-				self.rec += 1
+			# if self.state == "FIND":
+			# 	self.rec += 1
 
-		elif self.edges[e_index].state == "BASIC":
-			return -1
-
+		elif self.edges[i].state == "BASIC":
+			message = {
+				"code": "CONNECT",
+				"level": level,
+				"weight": self.edges[i].weight
+			}
+			self.drop(message)
 		else:
 			message = {
 				"code": "INITIATE",
 				"level": self.level+1,
-				"name": self.edges[e_index].weight,
+				"name": self.edges[i].weight,
 				"state": "FIND",
-				"weight": self.edges[e_index].weight
+				"weight": self.edges[i].weight
 			}
-			self.edges[e_index].node.drop(message)
-		return 1
+			self.edges[i].node.drop(message)
 
 	def initiate(self, level, name, state, i):
 		self.level, self.name, self.state = level, name, state
 		self.parent = i # as per my indexing
 
-		self.best_node = None
+		self.best_node = -1
 		self.best_weight = float('inf')
 
 		for e in range(len(self.edges)):
 			if (e != i) and (self.edges[e].state == "BRANCH"):
 				message = {
 					"code": "INITIATE",
-					"level": self.level,
-					"name":	self.name,
-					"state": self.state,
+					"level": level,
+					"name":	name,
+					"state": state,
 					"weight": self.edges[e].weight
 				}
 				self.edges[e].node.drop(message)
 
-				if self.state == "FIND":
-					self.rec += 1
+				# if self.state == "FIND":
+				# 	self.rec +=1
 
 		if self.state == "FIND":
+			self.rec = 0
 			self.find_min()
 
 	def find_min(self):
@@ -187,18 +187,25 @@ class Node:
 			}
 			self.edges[idx].node.drop(message)
 		else:
-			self.test_node = None
+			self.test_node = -1
 			self.report()
 
 	def test(self, level, name, i):
 		if self.state == "SLEEP":
 			self.wake_up()
 
-		if self.level < level:
-			return -1 # wait (by adding back in inbox @ read func)
+		if level > self.level:
+			message = {
+				"code": "TEST",
+				"level": level,
+				"name": name,
+				"weight": self.edges[i].weight
+			}
+			self.drop(message)			
+
 		elif self.name == name:
 			if self.edges[i].state == "BASIC":
-				self.edges[i].state == "REJECT"
+				self.edges[i].state = "REJECT"
 			if i != self.test_node:
 				# drop reject to q (letting him that you've rejected this)
 				message = {
@@ -215,10 +222,9 @@ class Node:
 				"weight": self.edges[i].weight
 			}
 			self.edges[i].node.drop(message)
-		return 1
 
 	def accept(self, i):
-		self.test_node = None
+		self.test_node = -1
 		if self.edges[i].weight < self.best_weight:
 			self.best_node = i
 			self.best_weight = self.edges[i].weight
@@ -230,11 +236,11 @@ class Node:
 		self.find_min()	
 
 	def report(self):
-		# count = 0
-		# for i in range(len(self.edges)):
-		# 	if (self.edges[i].state == "BRANCH") and (i != self.parent):
-		# 		count += 1
-		if (self.rec == 0) and (self.test_node == None):
+		count = 0
+		for i in range(len(self.edges)):
+			if (self.edges[i].state == "BRANCH") and (i != self.parent):
+				count += 1
+		if (self.rec == count) and (self.test_node == -1):
 			self.state = "FOUND"
 			message = {
 				"code": "REPORT",
@@ -246,22 +252,25 @@ class Node:
 
 	def process_report(self, best_wt, i):
 		if self.parent != i:
-			self.rec -= 1
+			# self.rec = self.rec - 1
 			if best_wt < self.best_weight:
 				self.best_weight = best_wt
 				self.best_node = i
+			self.rec += 1
 			self.report()
 		else:
 			if self.state == "FIND":
-				return -1
+				message = {
+					"code": "REPORT",
+					"best_weight": best_wt,
+					"weight": self.edges[i].weight
+				}
+				self.drop(message)
 			elif best_wt > self.best_weight:
 				self.change_root()
 			elif (best_wt == self.best_weight == float('inf')):
 				self.is_over = True
-				for i in range(10):
-					print("="*20)
-				print("{} FINIIIIIIIISH".format(self.index))
-		return 1
+				print("{} FINIIISH".format(self.index))
 
 	def change_root(self):
 		if self.edges[self.best_node].state == "BRANCH":
@@ -271,6 +280,7 @@ class Node:
 			}
 			self.edges[self.best_node].node.drop(message)
 		else:
+			self.edges[self.best_node].state = "BRANCH"
 			message = {
 				"code": "CONNECT",
 				"level": self.level,
@@ -278,8 +288,8 @@ class Node:
 			}
 			self.edges[self.best_node].node.drop(message)
 			
-			self.edges[self.best_node].state == "BRANCH"
 			with self.lock:
+				print("ADD MST")
 				manage.mst.append(self.edges[self.best_node].index)
 
 
