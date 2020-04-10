@@ -4,14 +4,19 @@ import operator
 
 all_edges = []
 all_nodes = []
-mst = {}
 
 from . import node, edge
 
+mst = {}
 def node_go_brrrrrr(n):
 	while True:
 		ret = n.read()
 		if ret:
+			with n.lock:
+				global mst
+				for k, v in n.mst.items():
+					if k not in mst:
+						mst[k] = True
 			return
 
 def run_algorithm(filename):
@@ -19,23 +24,37 @@ def run_algorithm(filename):
 		data = (f.read()).splitlines()
 
 	num_nodes = int(data[0])
-	all_nodes = []
 	for i in range(num_nodes):
 		n = node.Node(i)
 		all_nodes.append(n)
+		n.__init_lock__(threading.Lock())
 
 	for i in range(len(data)-1):
 		n1, n2, wt = (data[i+1].strip())[1:-1].split(",")
 		n1, n2, wt = int(n1), int(n2), int(wt)
-		e = edge.Edge(n1, n2, wt)
-		all_edges.append(e)
+		all_edges.append(edge.Edge(n1, n2, wt))
 		
 		all_nodes[n1].add_edge(i, wt, all_nodes[n2])
 		all_nodes[n2].add_edge(i, wt, all_nodes[n1])
 
+
+	# threads = []
+	# all_nodes[0].wake_up()
+	# while True:
+	# 	for n in all_nodes:
+	# 		ret = n.read()
+	# 		if ret:
+	# 			break
+	# 	else:
+	# 		continue
+	# 	for n in all_nodes:
+	# 		for k, v in n.mst.items():
+	# 			if k not in mst:
+	# 				mst[k] = True
+	# 	break
+
 	threads = []
-	for n in all_nodes:
-		n.__init_lock__(threading.Lock())
+	for i, n in enumerate(all_nodes):
 		t = threading.Thread(target=node_go_brrrrrr, args=[n])
 		threads.append(t)	
 		t.start()
@@ -44,10 +63,7 @@ def run_algorithm(filename):
 	for t in threads:
 		t.join()
 
-	# print("[*] No of nodes: {}".format(num_nodes))
-	# print("[*] No of edges: {}".format(len(data)-1))
-
-	mst_edges = [all_edges[k] for k, v in node.mst.items()]
+	mst_edges = [all_edges[k] for k, v in mst.items()]
 	mst_edges.sort(key=operator.attrgetter('wt'))
 
 	for m in mst_edges[:-1]:

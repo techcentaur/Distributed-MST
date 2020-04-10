@@ -3,12 +3,12 @@ from collections import deque
 from . import edge, manage, states
 
 over = False
-mst = {}
 
 class Node:
 	def __init__(self, i):
 		self.S = states.States()
 		self.index = i
+		self.mst = {}
 
 		self.name = float('inf')
 		self.edges = []
@@ -60,6 +60,7 @@ class Node:
 
 	def read(self):
 		if self.inbox:
+			ret = 0
 			with self.lock:
 				m = self.inbox.popleft()
 
@@ -70,33 +71,29 @@ class Node:
 			# print("{} <- {} <- {}".format(self.index, m["code"], self.edges[i].node.index))
 
 			if m["code"] == self.S.connect:
-				self.connect(m["level"], i)
+				ret = self.connect(m["level"], i)
 			elif m["code"] == self.S.initiate:
 				self.initiate(m["level"], m["name"], m["state"], i)
 			elif m["code"] == self.S.test:
-				self.test(m["level"], m["name"], i)
+				ret = self.test(m["level"], m["name"], i)
 			elif m["code"] == self.S.accept:
 				self.accept(i)
 			elif m["code"] == self.S.reject:
 				self.reject(i)
 			elif m["code"] == self.S.report:
-				self.process_report(m["best_weight"], i)
+				ret = self.process_report(m["best_weight"], i)
 			elif m["code"] == self.S.changeroot:
 				self.process_change_root()
-			else:
-				self.wake_up()
+
+			if ret == -1:
+				self.drop(m)
 		return over
 
 	def wake_up(self):
-		# print("WAKE UP | {}".format(self.index))
-
 		min_edge_i = self.find_min_wt_edge()
 
-		with self.lock:
-			global mst
-			if self.edges[min_edge_i].index not in mst:
-				# print("add")
-				mst[self.edges[min_edge_i].index] = True
+		if self.edges[min_edge_i].index not in self.mst:
+			self.mst[self.edges[min_edge_i].index] = True
 
 		self.edges[min_edge_i].state = self.S.branch
 		self.level = 0
@@ -122,16 +119,8 @@ class Node:
 			}
 			self.edges[i].node.drop(message)
 
-			# if self.state == self.S.find:
-			# 	self.rec += 1
-
 		elif self.edges[i].state == self.S.basic:
-			message = {
-				"code": self.S.connect,
-				"level": level,
-				"weight": self.edges[i].weight
-			}
-			self.drop(message)
+			return -1
 		else:
 			message = {
 				"code": self.S.initiate,
@@ -141,6 +130,7 @@ class Node:
 				"weight": self.edges[i].weight
 			}
 			self.edges[i].node.drop(message)
+		return 1
 
 	def initiate(self, level, name, state, i):
 		self.level, self.name, self.state = level, name, state
@@ -159,9 +149,6 @@ class Node:
 					"weight": self.edges[e].weight
 				}
 				self.edges[e].node.drop(message)
-
-				# if self.state == self.N.find:
-				# 	self.rec +=1
 
 		if state == self.S.find:
 			self.rec = 0
@@ -195,14 +182,7 @@ class Node:
 			self.wake_up()
 
 		if level > self.level:
-			message = {
-				"code": self.S.test,
-				"level": level,
-				"name": name,
-				"weight": self.edges[i].weight
-			}
-			self.drop(message)			
-
+			return -1
 		elif self.name == name:
 			if self.edges[i].state == self.S.basic:
 				self.edges[i].state = self.S.reject
@@ -216,12 +196,12 @@ class Node:
 			else:
 				self.find_min()
 		else:
-			# send accept to q
 			message = {
 				"code": self.S.accept,
 				"weight": self.edges[i].weight
 			}
 			self.edges[i].node.drop(message)
+		return 1
 
 	def accept(self, i):
 		self.test_node = -1
@@ -260,12 +240,7 @@ class Node:
 			self.report()
 		else:
 			if self.state == self.S.find:
-				message = {
-					"code": self.S.report,
-					"best_weight": best_wt,
-					"weight": self.edges[i].weight
-				}
-				self.drop(message)
+				return -1
 			elif best_wt > self.best_weight:
 				self.change_root()
 			elif (best_wt == self.best_weight == float('inf')):
@@ -273,6 +248,7 @@ class Node:
 				with self.lock:
 					global over
 					over = True
+			return 1
 
 	def change_root(self):
 		if self.edges[self.best_node].state == self.S.branch:
@@ -290,11 +266,8 @@ class Node:
 			}
 			self.edges[self.best_node].node.drop(message)
 			
-			with self.lock:
-				# print("add")
-				global mst
-				if self.edges[self.best_node].index not in mst:
-					mst[self.edges[self.best_node].index] = True
+			if self.edges[self.best_node].index not in self.mst:
+				self.mst[self.edges[self.best_node].index] = True
 
 
 	def process_change_root(self):
