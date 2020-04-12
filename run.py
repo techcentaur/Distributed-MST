@@ -1,19 +1,17 @@
 import sys
-from scripts import manage, test
+import os
+
+from scripts import manage
+import numpy as np
 
 if __name__ == '__main__':
-
-	checkflag = False
+	out = None
 	inp = str(sys.argv[1])
-	if len(sys.argv)>2:
-		out = str(sys.argv[2])
-		checkflag = True
 
-	if checkflag:
-		ret = test.check(inp, out)
-		if ret:
-			print("[+] MSTs are same")
-		else:
-			print("[?] MSTs are different")
-	else:
+	if len(sys.argv)==3:
+		out = str(sys.argv[2])
+
+	if out is None:
 		manage.run_algorithm(inp)
+	else:
+		manage.run_algorithm(inp, out)
