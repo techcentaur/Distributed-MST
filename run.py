@@ -8,7 +8,7 @@ if __name__ == '__main__':
 	out = None
 	inp = str(sys.argv[1])
 
-	if len(sys.argv)==3:
+	if len(sys.argv)>=2:
 		out = str(sys.argv[2])
 
 	if out is None:
