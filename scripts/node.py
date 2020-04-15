@@ -64,6 +64,10 @@ class Node:
 			with self.lock:
 				m = self.inbox.popleft()
 
+			if m["code"] == "wake":
+				self.wake_up()
+				return False
+
 			if self.state == self.S.sleep:
 				self.wake_up()
 
@@ -84,6 +88,8 @@ class Node:
 				ret = self.process_report(m["best_weight"], i)
 			elif m["code"] == self.S.changeroot:
 				self.process_change_root()
+			elif m["wake"] == "wake":
+				self.wake_up()
 
 			if ret == -1:
 				self.drop(m)

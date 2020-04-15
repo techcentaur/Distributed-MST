@@ -62,15 +62,21 @@ def run_algorithm(filename, out=None):
 	# 				mst[k] = True
 	# 	break
 
+	all_nodes[0].drop({"code": "wake"})
+
+	print("1")
 	threads = []
-	for i, n in enumerate(all_nodes):
-		t = threading.Thread(target=node_go_brrrrrr, args=[n])
-		threads.append(t)	
+	for i in range(len(all_nodes)):
+		threads.append(threading.Thread(target=node_go_brrrrrr, args=(all_nodes[i],)))
+
+	print("2")
+	for t in threads:
 		t.start()
 
-	all_nodes[0].wake_up()
+	print("3")
 	for t in threads:
 		t.join()
+	print("4")
 
 	mst_edges = [all_edges[k] for k, v in mst.items()]
 	mst_edges.sort(key=operator.attrgetter('wt'))

@@ -2,13 +2,12 @@ import sys
 import os
 
 from scripts import manage
-import numpy as np
 
 if __name__ == '__main__':
 	out = None
 	inp = str(sys.argv[1])
 
-	if len(sys.argv)>=2:
+	if len(sys.argv)>2:
 		out = str(sys.argv[2])
 
 	if out is None:
