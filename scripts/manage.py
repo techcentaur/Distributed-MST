@@ -23,7 +23,7 @@ def run_algorithm(filename, out=None):
 	with open(filename, 'r') as f:
 		data = (f.read()).splitlines()
 
-	num_nodes = int(data[0])
+	num_nodes = int(data[0].strip())
 	if num_nodes == 1:
 		if out is None:
 			return
@@ -47,30 +47,30 @@ def run_algorithm(filename, out=None):
 		all_nodes[n2].add_edge(i, wt, all_nodes[n1])
 
 
-	threads = []
-	all_nodes[0].wake_up()
-	while True:
-		for n in all_nodes:
-			ret = n.read()
-			if ret:
-				break
-		else:
-			continue
-		for n in all_nodes:
-			for k, v in n.mst.items():
-				if k not in mst:
-					mst[k] = True
-		break
-
 	# threads = []
-	# for i, n in enumerate(all_nodes):
-	# 	t = threading.Thread(target=node_go_brrrrrr, args=[n])
-	# 	threads.append(t)	
-	# 	t.start()
-
 	# all_nodes[0].wake_up()
-	# for t in threads:
-	# 	t.join()
+	# while True:
+	# 	for n in all_nodes:
+	# 		ret = n.read()
+	# 		if ret:
+	# 			break
+	# 	else:
+	# 		continue
+	# 	for n in all_nodes:
+	# 		for k, v in n.mst.items():
+	# 			if k not in mst:
+	# 				mst[k] = True
+	# 	break
+
+	threads = []
+	for i, n in enumerate(all_nodes):
+		t = threading.Thread(target=node_go_brrrrrr, args=[n])
+		threads.append(t)	
+		t.start()
+
+	all_nodes[0].wake_up()
+	for t in threads:
+		t.join()
 
 	mst_edges = [all_edges[k] for k, v in mst.items()]
 	mst_edges.sort(key=operator.attrgetter('wt'))
@@ -82,8 +82,8 @@ def run_algorithm(filename, out=None):
 	else:
 		s = ""
 		for m in mst_edges[:-1]:
-			s += m.__str__() + "\n"
-		s += mst_edges[-1].__str__()
+			s += m.__str__() + " \n"
+		s += mst_edges[-1].__str__() + " "
 
 		with open(out, 'w') as f:
 			f.write(s)

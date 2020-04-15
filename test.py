@@ -5,8 +5,8 @@ from test import testing
 from scripts import manage
 
 if __name__ == '__main__':
-	no_of_random_tests = 100
-	max_no_of_nodes = 100
+	no_of_random_tests = 1
+	max_no_of_nodes = 10
 	min_no_of_nodes = 2
 
 	for i in range(no_of_random_tests):
