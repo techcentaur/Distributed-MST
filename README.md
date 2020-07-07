@@ -7,10 +7,10 @@ Wiki for GHS - [link](https://en.wikipedia.org/wiki/Distributed_minimum_spanning
 
 ## Pre-conditions of Network
 
-	– Messages can be transmitted independently in both directions on Edge ("transfer" mode) and arrive without error (after a finite delay.): Fair assumption; can be managed in any pragammatic situation.
-	– Each edge delivers messages in FIFO order: Achieved with a Queue.
-	– The graph must be connected and undirected: Since it's a simulation, "connection" is easy, but in a real-action one might need some rule to manage the assumed  inter-connection.
-	– The graph should have distinct finite edge-weights (or some consistent way to remove ties.): This maybe weird but since needed by the algorithm can be managed in a "proxy" way; say by creating a unique "edge-weight", e.g., "?weight#node1#node2".
+- Messages can be transmitted independently in both directions on Edge ("transfer" mode) and arrive without error (after a finite delay.): Fair assumption; can be managed in any pragammatic situation.
+- Each edge delivers messages in FIFO order: Achieved with a Queue.
+- The graph must be connected and undirected: Since it's a simulation, "connection" is easy, but in a real-action one might need some rule to manage the assumed  inter-connection.
+- The graph should have distinct finite edge-weights (or some consistent way to remove ties.): This maybe weird but since needed by the algorithm can be managed in a "proxy" way; say by creating a unique "edge-weight", e.g., "?weight#node1#node2".
 
 ## Construction of Node
 
@@ -73,7 +73,7 @@ class EdgeNode:
 
 ```
 
-Edge code [here](./scripts/edge.py)
+Edge code [here.](./scripts/edge.py)
 
 ## Managing Algorithm
 
