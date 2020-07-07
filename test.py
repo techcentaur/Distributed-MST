@@ -1,3 +1,7 @@
+"""
+Some Test Scripts
+"""
+
 import os
 import numpy as np
 
@@ -13,14 +17,8 @@ if __name__ == '__main__':
 		n = np.random.randint(min_no_of_nodes, max_no_of_nodes)
 
 		testing.big_test(n)
-
-		### change this line // call your algorithm
-		#
-		# this should write all MST edges in a file named
-		# "outfile" in sorted order of weights (asc)
 		manage.run_algorithm("inpfile", "outfile")
 		
-
 		flag = (testing.check("outfile", "primfile"))
 		if not flag:
 			print("[*] something is wrong")

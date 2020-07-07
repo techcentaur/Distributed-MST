@@ -46,37 +46,17 @@ def run_algorithm(filename, out=None):
 		all_nodes[n1].add_edge(i, wt, all_nodes[n2])
 		all_nodes[n2].add_edge(i, wt, all_nodes[n1])
 
-
-	# threads = []
-	# all_nodes[0].wake_up()
-	# while True:
-	# 	for n in all_nodes:
-	# 		ret = n.read()
-	# 		if ret:
-	# 			break
-	# 	else:
-	# 		continue
-	# 	for n in all_nodes:
-	# 		for k, v in n.mst.items():
-	# 			if k not in mst:
-	# 				mst[k] = True
-	# 	break
-
 	all_nodes[0].drop({"code": "wake"})
 
-	print("1")
 	threads = []
 	for i in range(len(all_nodes)):
 		threads.append(threading.Thread(target=node_go_brrrrrr, args=(all_nodes[i],)))
 
-	print("2")
 	for t in threads:
 		t.start()
 
-	print("3")
 	for t in threads:
 		t.join()
-	print("4")
 
 	mst_edges = [all_edges[k] for k, v in mst.items()]
 	mst_edges.sort(key=operator.attrgetter('wt'))
